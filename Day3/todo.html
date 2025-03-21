@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Task List</title>
+    <style>
+        .completed {
+            text-decoration: line-through;
+            color: grey;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Task List</h1>
+
+    Task: <input id="input" type="text"> 
+    <button onclick="addTask()">Add</button>
+    <button onclick="clearAllTasks()">Clear All</button>
+
+    <ol id="list">
+    </ol>
+
+    <script>
+        const input = document.getElementById('input');
+        const list = document.getElementById('list');
+        let taskCount = 0;
+
+        // Load tasks from local storage on page load
+        window.onload = () => {
+            const savedTasks = JSON.parse(localStorage.getItem('tasks'));
+            if (savedTasks) {
+                savedTasks.forEach(task => addTaskToList(task.text, task.id, task.completed));
+            }
+        }
+
+        // Save tasks to local storage
+        const saveTasks = () => {
+            const tasks = [];
+            document.querySelectorAll('#list li').forEach(li => {
+                tasks.push({
+                    id: li.id,
+                    text: li.querySelector('.task-text').innerText,
+                    completed: li.classList.contains('completed')
+                });
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function addTask() {
+            const taskText = input.value.trim();
+            if (taskText === '') return;
+
+            addTaskToList(taskText);
+            input.value = '';
+            saveTasks();
+        }
+
+        function addTaskToList(text, id = "task-" + ++taskCount, completed = false) {
+            const newLi = document.createElement('li');
+            newLi.id = id;
+            if (completed) newLi.classList.add('completed');
+
+            const taskText = document.createElement('span');
+            taskText.classList.add('task-text');
+            taskText.innerText = text;
+
+            const editButton = document.createElement('button');
+            editButton.innerText = 'Edit';
+            editButton.onclick = () => editTask(newLi);
+
+            const delButton = document.createElement('button');
+            delButton.innerText = 'Del';
+            delButton.onclick = () => deleteTask(newLi);
+
+            const completeButton = document.createElement('button');
+            completeButton.innerText = 'Complete';
+            completeButton.onclick = () => toggleCompletion(newLi);
+
+            newLi.appendChild(taskText);
+            newLi.appendChild(editButton);
+            newLi.appendChild(delButton);
+            newLi.appendChild(completeButton);
+            list.appendChild(newLi);
+        }
+
+        function deleteTask(taskElement) {
+            taskElement.remove();
+            saveTasks();
+        }
+
+        function toggleCompletion(taskElement) {
+            taskElement.classList.toggle('completed');
+            saveTasks();
+        }
+
+        function editTask(taskElement) {
+            const taskText = taskElement.querySelector('.task-text');
+            const newText = prompt('Edit Task:', taskText.innerText);
+            if (newText !== null && newText.trim() !== '') {
+                taskText.innerText = newText;
+                saveTasks();
+            }
+        }
+
+        function clearAllTasks() {
+            list.innerHTML = '';
+            saveTasks();
+        }
+    </script>
+
+</body>
+</html>
